@@ -3,6 +3,8 @@ import pandas as pd
 import plotly.express as px
 import os
 import pickle
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Saudi Ecommerce - جميل ناصر", layout="wide", page_icon="🇸🇦")
 
@@ -34,23 +36,37 @@ if st.sidebar.button("توقع المبيعات 🚀"):
     st.balloons()
 
 # قراءة البيانات الحقيقية - هذا هو الفرق
-st.subheader("📊 بياناتك الحقيقية من المرحلة الأولى")
+st.subheader("📊 تحليل Seaborn - من بياناتك الحقيقية 1165 طلب")
 
-csv_found = False
-for csv_path in ["cleaned_saudi_store.csv", "../cleaned_saudi_store.csv", "cleaned_saudi_store"]:
-    if os.path.exists(csv_path):
-        try:
-            df = pd.read_csv(csv_path)
-            st.success(f"✅ يقرأ الآن من ملفك الحقيقي: {csv_path} | عدد الصفوف: {len(df)} | الأعمدة: {list(df.columns)}")
-            st.dataframe(df.head(10))
-            
-            # رسم بياني تلقائي من أول عمودين رقميين
-            st.plotly_chart(px.histogram(df, x=df.columns[0], title=f"توزيع {df.columns[0]} من بياناتك الحقيقية"), use_container_width=True)
-            csv_found = True
-            break
-        except Exception as e:
-            st.error(f"خطأ في قراءة {csv_path}: {e}")
+col1, col2 = st.columns(2)
 
-if not csv_found:
-    st.error("❌ لم أجد cleaned_saudi_store.csv - انسخه داخل مجلد Phase3_WebApp")
-    st.info(f"أنا أبحث في: {os.getcwd()}")
+with col1:
+    st.write("**توزيع إجمالي المبيعات حسب المدينة**")
+    fig, ax = plt.subplots()
+    sns.barplot(data=df, x='City', y='Total', estimator=sum, ci=None, ax=ax)
+    plt.xticks(rotation=45)
+    plt.title("إجمالي المبيعات لكل مدينة")
+    st.pyplot(fig)
+
+with col2:
+    st.write("**العلاقة بين السعر والكمية**")
+    fig2, ax2 = plt.subplots()
+    sns.scatterplot(data=df, x='Price', y='Quantity', hue='Category', ax=ax2)
+    plt.title("هل المنتجات الغالية تُشترى بكمية أقل؟")
+    st.pyplot(fig2)
+
+st.write("**توزيع طرق الدفع**")
+fig3, ax3 = plt.subplots()
+sns.countplot(data=df, x='PaymentMethod', hue='City', ax=ax3)
+plt.xticks(rotation=30)
+plt.title("طرق الدفع حسب المدينة - السعودية")
+st.pyplot(fig3)
+
+# رسم حراري - أهم واحد للتاجر
+st.write("**الخريطة الحرارية - العلاقات**")
+fig4, ax4 = plt.subplots()
+# نأخذ الأعمدة الرقمية فقط
+numeric_df = df[['Quantity', 'Price', 'Total']]
+sns.heatmap(numeric_df.corr(), annot=True, cmap='Greens', ax=ax4)
+plt.title("ما الذي يؤثر على إجمالي المبيعات؟")
+st.pyplot(fig4)
