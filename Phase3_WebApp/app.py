@@ -1,3 +1,42 @@
+# ===== المرحلة الخامسة: التسعير =====
+st.divider()
+st.subheader("💰 باقات لوحة تحكم التاجر السعودي - المرحلة الخامسة")
+
+col_price1, col_price2, col_price3 = st.columns(3)
+
+with col_price1:
+    st.markdown("""
+    <div style="border:1px solid #ccc; padding:20px; border-radius:15px; text-align:center;">
+    <h3>🆓 مجاني</h3>
+    <h2>0 ريال</h2>
+    <p>✅ عرض 100 طلب<br>✅ رسم واحد<br>❌ بدون Excel</p>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button("ابدأ مجاناً", key="free"):
+        st.info("أنت الآن على الباقة المجانية - 100 طلب فقط")
+
+with col_price2:
+    st.markdown("""
+    <div style="border:2px solid #006C35; padding:20px; border-radius:15px; text-align:center; background:#f0fff4;">
+    <h3>🔥 الأكثر طلباً</h3>
+    <h2>49 ريال/شهر</h2>
+    <p>✅ 1165 طلب كامل<br>✅ كل الرسوم<br>✅ تصدير Excel<br>✅ فلتر المدن</p>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button("اشترك الآن - 49 ريال", key="pro"):
+        st.success("🎉 تم تفعيل الباقة الاحترافية! الآن تقدر تحمل Excel وتشوف كل المدن")
+        st.session_state['is_pro'] = True
+
+with col_price3:
+    st.markdown("""
+    <div style="border:1px solid #ccc; padding:20px; border-radius:15px; text-align:center;">
+    <h3>🏢 شركات</h3>
+    <h2>199 ريال/شهر</h2>
+    <p>✅ كل شيء في الاحترافية<br>✅ API<br>✅ دعم 24/7</p>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button("تواصل للمؤسسات", key="ent"):
+        st.info("تواصل على: jnasser504-star@github.com")
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -72,17 +111,31 @@ for csv_path in ["cleaned_saudi_store.csv", "../cleaned_saudi_store.csv"]:
             cf3.metric("متوسط الفلتر", f"{df_filtered['Total'].mean():.0f} ريال" if len(df_filtered) > 0 else "0")
 
             # زر تصدير Excel
-            st.subheader("📥 تصدير تقرير التاجر")
-            output = BytesIO()
-            with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                df_filtered.to_excel(writer, index=False, sheet_name='تقرير المبيعات')
-            
-            st.download_button(
-                label="📊 حمّل تقرير Excel للفلتر الحالي",
-                data=output.getvalue(),
-                file_name=f"تقرير_{selected_city}_{selected_category}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+           # ===== المرحلة الخامسة: زر Excel محمي بالاشتراك =====
+st.subheader("📥 تصدير تقرير التاجر - ميزة مدفوعة")
+
+# نحضر ملف Excel في الذاكرة
+output = BytesIO()
+with pd.ExcelWriter(output, engine='openpyxl') as writer:
+    df_filtered.to_excel(writer, index=False, sheet_name='تقرير المبيعات')
+
+# نفحص هل المستخدم مشترك؟
+if 'is_pro' in st.session_state and st.session_state['is_pro']:
+    # إذا مشترك - اعطه الملف
+    st.success("✅ أنت مشترك في باقة 49 ريال - التحميل متاح")
+    st.download_button(
+        label="📊 حمّل تقرير Excel (مفعل)",
+        data=output.getvalue(),
+        file_name=f"تقرير_{selected_city}_{selected_category}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+else:
+    # إذا مو مشترك - اقفل الزر
+    st.warning("🔒 تصدير Excel متاح فقط لمشتركي باقة 49 ريال")
+    st.info(f"لديك {len(df_filtered)} طلب جاهز للتصدير، اشترك لتحميله")
+    if st.button("🔓 ادفع 49 ريال وافتح التحميل"):
+        st.session_state['is_pro'] = True
+        st.rerun()
 
             st.divider()
 
